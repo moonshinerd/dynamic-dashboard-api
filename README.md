@@ -23,7 +23,7 @@ A forma mais rápida de subir o projeto completo (MySQL + API + migrations + see
 
 ```bash
 # Clonar o repositório
-git clone <repo-url>
+git clone https://github.com/moonshinerd/dynamic-dashboard-api.git
 cd dynamic-dashboard-api
 
 # Subir tudo com um único comando
