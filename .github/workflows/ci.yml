@@ -45,7 +45,7 @@ jobs:
           --health-cmd="mysqladmin ping -h localhost"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=10
     env:
       DATABASE_URL: mysql://root:root@localhost:3306/dashboard_test
       NODE_ENV: test
@@ -55,7 +55,20 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 --silent 2>/dev/null; then
+              echo "MySQL is ready"
+              break
+            fi
+            echo "Waiting for MySQL... ($i/30)"
+            sleep 2
+          done
       - run: npm ci
-      - run: npx prisma migrate deploy
-      - run: npx prisma db seed
+      - run: npx prisma generate
+      - name: Run migrations
+        run: npx prisma migrate deploy
+      - name: Seed database
+        run: npx prisma db seed
       - run: npm run test:integration
