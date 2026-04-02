@@ -1,220 +1,171 @@
-# Dynamic Dashboard API
+# Maintenance KPI Dashboard API
 
-API RESTful dinâmica para servir dados de dashboard, com suporte a múltiplos tipos de gráfico e filtro obrigatório por período de datas.
+API RESTful para indicadores de performance (KPIs) de manutenção agrupados por família de equipamentos.
 
 ## Stack
 
 - **Node.js** + **TypeScript** (strict)
-- **Express** — framework HTTP
-- **Prisma** — ORM
-- **MySQL** — banco de dados
-- **Jest** + **Supertest** — testes
-- **Swagger/OpenAPI 3.0** — documentação
-- **Docker** + **docker-compose** — containerização
+- **NestJS** — framework HTTP com injeção de dependência
+- **Prisma** — ORM com `$queryRaw` para SQL puro
+- **MySQL** — banco de dados (DigitalOcean)
+- **Passport / JWT** — autenticação
+- **Zod** — validação de inputs
+- **Jest** — testes unitários e de integração
 
-## Pré-requisitos
+---
 
-- [Node.js](https://nodejs.org/) v20+
-- [Docker](https://www.docker.com/) e Docker Compose
-
-## Desenvolvimento com Docker (recomendado)
-
-A forma mais rápida de subir o projeto completo (MySQL + API + migrations + seed):
+## Instalação
 
 ```bash
-# Clonar o repositório
-git clone https://github.com/moonshinerd/dynamic-dashboard-api.git
-cd dynamic-dashboard-api
-
-# Subir tudo com um único comando
-docker-compose -f docker-compose.dev.yml up --build
-```
-
-Isso irá:
-1. Subir o MySQL 8.0
-2. Rodar as migrations (`prisma migrate deploy`)
-3. Popular o banco com dados de exemplo (`prisma db seed`)
-4. Iniciar a API em modo desenvolvimento
-
-A API estará disponível em `http://localhost:3000`.
-
-Para derrubar os serviços:
-
-```bash
-docker-compose -f docker-compose.dev.yml down
-```
-
-Para derrubar e apagar os dados do banco (volume):
-
-```bash
-docker-compose -f docker-compose.dev.yml down -v
-```
-
-## Desenvolvimento Local (sem Docker)
-
-Requer um MySQL 8.0 rodando localmente.
-
-```bash
-# Instalar dependências
 npm install
-
-# Configurar variáveis de ambiente
-cp .env.example .env
-# Edite o .env com sua conexão MySQL
-
-# Gerar o Prisma Client
 npx prisma generate
-
-# Rodar as migrations
-npx prisma migrate dev
-
-# Popular o banco com dados de exemplo
-npx prisma db seed
-
-# Iniciar em modo desenvolvimento
-npm run dev
 ```
 
-## Produção com Docker
+Copie `.env.example` para `.env` e ajuste as variáveis.
+
+---
+
+## Executar
 
 ```bash
-docker-compose up --build
+# Desenvolvimento
+npm run dev
+
+# Produção
+npm run build && npm start
 ```
 
-Usa o `Dockerfile` multi-stage (build TypeScript → roda a partir de `dist/`).
+---
 
 ## Testes
 
-Os testes não precisam de MySQL — o repositório é mockado. Basta ter as dependências instaladas:
-
 ```bash
-# Instalar dependências (se ainda não fez)
-npm install
-
-# Gerar o Prisma Client (necessário para os tipos)
-npx prisma generate
-
-# Rodar todos os testes com relatório de cobertura
-npm test
+npm test                          # todos os testes com cobertura
+npm run test:unit                 # apenas unitários
+npm run test:integration          # apenas integração
 ```
 
-Para rodar separadamente:
+---
 
-```bash
-# Apenas testes unitários
-npm run test:unit
+## Autenticação
 
-# Apenas testes de integração
-npm run test:integration
-```
+A API usa JWT. Obtenha um token antes de chamar rotas protegidas:
 
-### Cobertura
+```http
+POST /auth/login
+Content-Type: application/json
 
-O projeto exige no mínimo **80%** de cobertura. Ao rodar `npm test`, o relatório é gerado na pasta `coverage/`.
-
-## Variáveis de Ambiente
-
-| Variável       | Descrição                                    | Padrão                                       |
-|----------------|----------------------------------------------|----------------------------------------------|
-| `DATABASE_URL` | Connection string do MySQL                   | `mysql://root:root@localhost:3306/dashboard`  |
-| `PORT`         | Porta do servidor                            | `3000`                                       |
-| `NODE_ENV`     | Ambiente (`development`/`production`/`test`) | `development`                                |
-
-## Endpoints
-
-### `GET /api/v1/charts/:chartType`
-
-Retorna dados formatados para o tipo de gráfico solicitado.
-
-**Parâmetros:**
-
-| Parâmetro   | Tipo   | Local | Obrigatório | Descrição                                      |
-|-------------|--------|-------|-------------|-------------------------------------------------|
-| `chartType` | string | path  | Sim         | Tipo do gráfico: `pie`, `line`, `bar`, `area`  |
-| `startDate` | string | query | Sim         | Data início (YYYY-MM-DD)                        |
-| `endDate`   | string | query | Sim         | Data fim (YYYY-MM-DD)                           |
-
-**Exemplo:**
-
-```bash
-curl "http://localhost:3000/api/v1/charts/pie?startDate=2025-01-01&endDate=2025-12-31"
-```
-
-**Resposta (200):**
-
-```json
 {
-  "data": {
-    "labels": ["Electronics", "Clothing", "Food & Beverages"],
-    "values": [125000.50, 48000.00, 22500.75]
-  },
-  "meta": {
-    "startDate": "2025-01-01",
-    "endDate": "2025-12-31",
-    "chartType": "pie"
-  }
+  "email": "admin@smartnew.com",
+  "password": "smartnew2024"
 }
 ```
 
-**Resposta de erro (400):**
+Resposta:
+```json
+{ "access_token": "<jwt>" }
+```
+
+Use o token no header:
+```
+Authorization: Bearer <jwt>
+```
+
+---
+
+## Endpoint Principal
+
+### `GET /maintenance/reports/performance-indicator`
+
+Retorna KPIs de manutenção agrupados por família de equipamentos para o cliente autenticado.
+
+**Requer autenticação.**
+
+#### Query Parameters
+
+| Parâmetro        | Tipo   | Obrigatório | Descrição                                      |
+|------------------|--------|-------------|------------------------------------------------|
+| `startDate`      | DATE   | Não         | Início do período (`YYYY-MM-DD`). Default: 30 dias atrás |
+| `endDate`        | DATE   | Não         | Fim do período (`YYYY-MM-DD`). Default: hoje   |
+| `typeMaintenance`| STRING | Não         | IDs de tipo de manutenção separados por vírgula (ex: `"1,2,3"`) |
+
+#### Resposta
 
 ```json
 {
-  "error": {
-    "message": "startDate is required",
-    "code": "VALIDATION_ERROR"
-  }
+  "success": true,
+  "data": [
+    {
+      "Familia": "COMPRESSORES",
+      "DF": 85.50,
+      "MTBF": 120.5,
+      "MTTR": 4.2,
+      "Paradas": 15,
+      "tempo_prev": 1800,
+      "tempo_corretiva": 63
+    }
+  ]
 }
 ```
 
-### `GET /api/v1/health`
+#### Campos
 
-Health check do serviço.
+| Campo            | Descrição                                               |
+|------------------|---------------------------------------------------------|
+| `Familia`        | Nome da família de equipamentos                         |
+| `DF`             | Disponibilidade Física (%) — `((tempo_prev - tempo_corretiva) / tempo_prev) * 100` |
+| `MTBF`           | Tempo médio entre falhas (h) — `(tempo_prev - tempo_corretiva) / Paradas` |
+| `MTTR`           | Tempo médio para reparo (h) — `tempo_corretiva / Paradas` |
+| `Paradas`        | Quantidade de paradas no período                        |
+| `tempo_prev`     | Tempo previsto de funcionamento (h), da escala de trabalho |
+| `tempo_corretiva`| Tempo de manutenção (h), da soma das paradas            |
 
-**Resposta (200):**
+> **Nota:** quando `Paradas = 0`, o divisor usado é `1` para evitar divisão por zero.
 
-```json
-{ "status": "ok" }
-```
+---
 
-### Documentação Swagger
-
-Acesse `http://localhost:3000/api-docs` para a documentação interativa dos endpoints.
-
-## Arquitetura
-
-O projeto segue **Clean Architecture**:
+## Estrutura do Projeto
 
 ```
 src/
-├── config/               # Variáveis de ambiente, Swagger
-├── domain/               # Entidades e interfaces (zero dependências externas)
-├── application/          # Casos de uso (regras de negócio)
-├── infrastructure/       # Implementações concretas (Prisma, MySQL)
-├── presentation/         # Controllers, rotas, middlewares, DTOs
-├── shared/               # Erros customizados, utilitários
-└── main.ts               # Bootstrap da aplicação
+├── app.module.ts                    # Módulo raiz
+├── main.ts                          # Bootstrap NestJS
+├── config/
+│   └── env.ts                       # Validação de env vars com Zod
+├── prisma/
+│   ├── prisma.module.ts             # Módulo global Prisma
+│   └── prisma.service.ts            # PrismaClient como serviço NestJS
+├── auth/
+│   ├── auth.module.ts
+│   ├── auth.controller.ts           # POST /auth/login
+│   ├── auth.service.ts              # Validação de credenciais + geração JWT
+│   ├── auth.guard.ts                # JwtAuthGuard (AuthGuard('jwt'))
+│   ├── jwt.strategy.ts              # Estratégia Passport JWT
+│   └── dto/login.dto.ts             # Schema Zod para login
+├── maintenance/
+│   ├── maintenance.module.ts
+│   ├── maintenance.controller.ts    # GET /maintenance/reports/performance-indicator
+│   ├── maintenance.service.ts       # Cálculo dos KPIs
+│   ├── dto/
+│   │   └── performance-indicator-query.dto.ts  # Schema Zod para query params
+│   └── repositories/
+│       ├── maintenance.repository.interface.ts  # Contrato do repositório
+│       └── prisma-maintenance.repository.ts     # SQL puro via $queryRaw
+└── shared/
+    ├── pipes/zod-validation.pipe.ts  # Pipe genérico de validação Zod
+    └── errors/app-error.exception.ts # Exceção HTTP customizada
 ```
 
-**Regra de dependência:** `presentation → application → domain`. Nenhuma camada interna conhece a externa.
+---
 
-## Tipos de Gráfico
+## Lógica do SQL (Repositório)
 
-| Tipo   | Formato dos dados                                                |
-|--------|------------------------------------------------------------------|
-| `pie`  | `labels` (categorias) + `values` (totais por categoria)         |
-| `bar`  | `labels` (categorias) + `datasets` com valores por categoria    |
-| `line` | `labels` (datas) + `datasets` com série temporal por categoria  |
-| `area` | Mesmo formato de `line` (diferença é visual no frontend)        |
+O cálculo usa as tabelas:
 
-## Scripts disponíveis
+- **`cadastro_de_familias_de_equipamento`** → agrupamento por família
+- **`cadastro_de_equipamentos`** → filtra por `id_cliente` do usuário autenticado
+- **`sofman_prospect_escala_trabalho`** → `TIMEDIFF(termino, inicio)` → `tempo_prev`
+- **`sofman_apontamento_paradas`** → `TIMESTAMPDIFF(SECOND, data_hora_stop, data_hora_start)` → `tempo_corretiva`
+- **`controle_de_ordens_de_servico`** → filtro opcional por `tipo_manutencao`
 
-| Comando                  | Descrição                                    |
-|--------------------------|----------------------------------------------|
-| `npm run dev`            | Inicia em modo desenvolvimento (ts-node)     |
-| `npm run build`          | Compila TypeScript para `dist/`              |
-| `npm start`              | Inicia a partir do build (`dist/main.js`)    |
-| `npm test`               | Roda todos os testes com cobertura           |
-| `npm run test:unit`      | Roda apenas testes unitários                 |
-| `npm run test:integration` | Roda apenas testes de integração           |
-| `npm run lint`           | Verifica erros de tipagem (tsc --noEmit)     |
+Os KPIs são calculados em memória no `MaintenanceService` após o retorno do repositório.

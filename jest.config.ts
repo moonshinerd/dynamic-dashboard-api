@@ -5,14 +5,22 @@ const config: Config = {
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   testMatch: ['**/*.spec.ts'],
-  moduleNameMapper: {
-    '^@domain/(.*)$': '<rootDir>/src/domain/$1',
-    '^@application/(.*)$': '<rootDir>/src/application/$1',
-    '^@infrastructure/(.*)$': '<rootDir>/src/infrastructure/$1',
-    '^@presentation/(.*)$': '<rootDir>/src/presentation/$1',
-    '^@shared/(.*)$': '<rootDir>/src/shared/$1',
-    '^@config/(.*)$': '<rootDir>/src/config/$1',
+  transform: {
+    '^.+\\.(t|j)s$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          emitDecoratorMetadata: true,
+          experimentalDecorators: true,
+          strict: true,
+          strictPropertyInitialization: false,
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+        },
+      },
+    ],
   },
+  setupFiles: ['<rootDir>/tests/setup.ts'],
   coverageDirectory: 'coverage',
   coverageThreshold: {
     global: {
@@ -25,7 +33,7 @@ const config: Config = {
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/main.ts',
-    '!src/infrastructure/database/**',
+    '!src/prisma/**',
   ],
 };
 
