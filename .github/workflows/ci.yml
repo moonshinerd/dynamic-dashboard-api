@@ -9,6 +9,8 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: mysql://user:password@localhost:3306/sofman
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,6 +23,8 @@ jobs:
 
   test-unit:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: mysql://user:password@localhost:3306/sofman
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,21 +37,8 @@ jobs:
 
   test-integration:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: dashboard_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
     env:
-      DATABASE_URL: mysql://root:root@localhost:3306/dashboard_test
+      DATABASE_URL: mysql://user:password@localhost:3306/sofman
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
@@ -55,20 +46,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Wait for MySQL to be ready
-        run: |
-          for i in $(seq 1 30); do
-            if mysqladmin ping -h 127.0.0.1 --silent 2>/dev/null; then
-              echo "MySQL is ready"
-              break
-            fi
-            echo "Waiting for MySQL... ($i/30)"
-            sleep 2
-          done
       - run: npm ci
       - run: npx prisma generate
-      - name: Run migrations
-        run: npx prisma migrate deploy
-      - name: Seed database
-        run: npx prisma db seed
       - run: npm run test:integration
