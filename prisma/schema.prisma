@@ -6,3 +6,13 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+// Minimal model required for Prisma Client generation.
+// All queries use $queryRaw against the existing legacy schema.
+model CadastroFamiliasEquipamento {
+  ID         Int    @id @default(autoincrement())
+  ID_cliente Int
+  familia    String
+
+  @@map("cadastro_de_familias_de_equipamento")
+}
