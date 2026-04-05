@@ -47,7 +47,7 @@ describe('MaintenanceService', () => {
   });
 
   it('should calculate KPIs correctly for normal case', async () => {
-    const result = await service.getPerformanceIndicators({}, 405);
+    const result = await service.getPerformanceIndicators({ chartType: 'table' }, 405);
 
     const compressores = result.find((r) => r.Familia === 'COMPRESSORES');
     expect(compressores).toBeDefined();
@@ -63,7 +63,7 @@ describe('MaintenanceService', () => {
   });
 
   it('should use divisor=1 when paradas=0 to avoid division by zero', async () => {
-    const result = await service.getPerformanceIndicators({}, 405);
+    const result = await service.getPerformanceIndicators({ chartType: 'table' }, 405);
 
     const bombas = result.find((r) => r.Familia === 'BOMBAS');
     expect(bombas).toBeDefined();
@@ -77,14 +77,14 @@ describe('MaintenanceService', () => {
   });
 
   it('should return DF=0 when tempo_prev=0', async () => {
-    const result = await service.getPerformanceIndicators({}, 405);
+    const result = await service.getPerformanceIndicators({ chartType: 'table' }, 405);
 
     const motores = result.find((r) => r.Familia === 'MOTORES');
     expect(motores?.DF).toBe(0);
   });
 
   it('should apply default dates when not provided', async () => {
-    await service.getPerformanceIndicators({}, 405);
+    await service.getPerformanceIndicators({ chartType: 'table' }, 405);
 
     const callArgs = mockRepository.getRawPerformanceByFamily.mock.calls[0][0];
     expect(callArgs.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -98,7 +98,7 @@ describe('MaintenanceService', () => {
 
   it('should parse typeMaintenance IDs correctly', async () => {
     await service.getPerformanceIndicators(
-      { typeMaintenance: '1,2,3' },
+      { typeMaintenance: '1,2,3', chartType: 'table' as const },
       405,
     );
 
@@ -107,14 +107,14 @@ describe('MaintenanceService', () => {
   });
 
   it('should pass empty typeMaintenanceIds when typeMaintenance not provided', async () => {
-    await service.getPerformanceIndicators({}, 405);
+    await service.getPerformanceIndicators({ chartType: 'table' }, 405);
 
     const callArgs = mockRepository.getRawPerformanceByFamily.mock.calls[0][0];
     expect(callArgs.typeMaintenanceIds).toEqual([]);
   });
 
   it('should pass the clientId to the repository', async () => {
-    await service.getPerformanceIndicators({}, 405);
+    await service.getPerformanceIndicators({ chartType: 'table' }, 405);
 
     const callArgs = mockRepository.getRawPerformanceByFamily.mock.calls[0][0];
     expect(callArgs.clientId).toBe(405);

@@ -22,6 +22,10 @@ export const performanceIndicatorQuerySchema = z
       (val) => (val === '' ? undefined : val),
       z.string().optional(),
     ),
+    chartType: z.preprocess(
+      (val) => (val === '' ? undefined : val),
+      z.enum(['pie', 'line', 'bar', 'table']).optional().default('table'),
+    ),
   })
   .refine(
     (data) => {

@@ -21,21 +21,7 @@ jobs:
       - run: npx prisma generate
       - run: npm run lint
 
-  test-unit:
-    runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: mysql://user:password@localhost:3306/sofman
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npx prisma generate
-      - run: npm run test:unit -- --coverage
-
-  test-integration:
+  test:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: mysql://user:password@localhost:3306/sofman
@@ -48,4 +34,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
-      - run: npm run test:integration
+      - run: npm test

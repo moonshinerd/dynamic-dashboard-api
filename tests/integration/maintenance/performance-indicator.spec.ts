@@ -142,4 +142,59 @@ describe('GET /maintenance/reports/performance-indicator (integration)', () => {
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
   });
+
+  it('should return table format by default', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/maintenance/reports/performance-indicator')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .query({ startDate: '2024-01-01', endDate: '2024-12-31' });
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.data)).toBe(true);
+    expect(response.body.data[0]).toHaveProperty('Familia');
+  });
+
+  it('should return pie chart format when chartType=pie', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/maintenance/reports/performance-indicator')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .query({ startDate: '2024-01-01', endDate: '2024-12-31', chartType: 'pie' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.labels).toBeDefined();
+    expect(response.body.data.datasets).toHaveLength(1);
+    expect(response.body.data.datasets[0].data).toHaveLength(2);
+  });
+
+  it('should return bar chart format when chartType=bar', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/maintenance/reports/performance-indicator')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .query({ startDate: '2024-01-01', endDate: '2024-12-31', chartType: 'bar' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.labels).toBeDefined();
+    expect(response.body.data.datasets.length).toBeGreaterThan(1);
+    expect(response.body.data.datasets[0]).toHaveProperty('label');
+  });
+
+  it('should return line chart format when chartType=line', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/maintenance/reports/performance-indicator')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .query({ startDate: '2024-01-01', endDate: '2024-12-31', chartType: 'line' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.labels).toBeDefined();
+    expect(response.body.data.datasets[0]).toHaveProperty('label');
+  });
+
+  it('should reject invalid chartType', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/maintenance/reports/performance-indicator')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .query({ startDate: '2024-01-01', endDate: '2024-12-31', chartType: 'scatter' });
+
+    expect(response.status).toBe(400);
+  });
 });

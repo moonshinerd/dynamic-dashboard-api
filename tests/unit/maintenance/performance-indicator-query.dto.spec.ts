@@ -72,4 +72,34 @@ describe('performanceIndicatorQuerySchema', () => {
       expect(result.data.typeMaintenance).toBe('1,2,3');
     }
   });
+
+  it('should default chartType to "table"', () => {
+    const result = performanceIndicatorQuerySchema.safeParse({});
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.chartType).toBe('table');
+    }
+  });
+
+  it('should accept valid chartType values', () => {
+    for (const type of ['pie', 'line', 'bar', 'table']) {
+      const result = performanceIndicatorQuerySchema.safeParse({ chartType: type });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it('should reject invalid chartType', () => {
+    const result = performanceIndicatorQuerySchema.safeParse({
+      chartType: 'scatter',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('should convert empty chartType to default "table"', () => {
+    const result = performanceIndicatorQuerySchema.safeParse({ chartType: '' });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.chartType).toBe('table');
+    }
+  });
 });
