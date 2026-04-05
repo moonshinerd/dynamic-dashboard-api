@@ -35,6 +35,8 @@ npm run dev
 npm run build && npm start
 ```
 
+A documentação interativa (Swagger) fica disponível em: `http://localhost:3000/api/docs`
+
 ---
 
 ## Testes
@@ -88,6 +90,16 @@ Retorna KPIs de manutenção agrupados por família de equipamentos para o clien
 | `startDate`      | DATE   | Não         | Início do período (`YYYY-MM-DD`). Default: 30 dias atrás |
 | `endDate`        | DATE   | Não         | Fim do período (`YYYY-MM-DD`). Default: hoje   |
 | `typeMaintenance`| STRING | Não         | IDs de tipo de manutenção separados por vírgula (ex: `"1,2,3"`) |
+| `chartType`      | STRING | Não         | Formato da resposta: `table` (padrão), `pie`, `bar`, `line` |
+
+#### Formatos de Gráfico (`chartType`)
+
+| Tipo | Descrição | Estrutura |
+|------|-----------|-----------|
+| `table` | Tabela (padrão) | Array de objetos com todos os campos |
+| `pie` | Gráfico de pizza — proporção de paradas por família | `{ labels, datasets: [{ label: "Paradas", data }] }` |
+| `bar` | Gráfico de barras — KPIs por família | `{ labels, datasets: [{ label: "DF (%)", data }, { label: "MTBF (h)", data }, { label: "MTTR (h)", data }] }` |
+| `line` | Gráfico de linhas — tempo previsto vs corretiva | `{ labels, datasets: [{ label: "Tempo Previsto (h)", data }, { label: "Tempo Corretiva (h)", data }] }` |
 
 #### Resposta
 
