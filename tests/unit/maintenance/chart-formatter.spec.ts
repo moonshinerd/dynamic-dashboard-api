@@ -31,31 +31,38 @@ describe('formatForChart', () => {
     expect(result).toEqual(sampleData);
   });
 
-  it('should format data for "pie" chart with DF values', () => {
+  it('should format "pie" with Paradas (proportion of stops per family)', () => {
     const result = formatForChart(sampleData, 'pie') as ChartFormattedResponse;
     expect(result.labels).toEqual(['COMPRESSORES', 'BOMBAS']);
     expect(result.datasets).toHaveLength(1);
-    expect(result.datasets[0].data).toEqual([90, 100]);
+    expect(result.datasets[0].label).toBe('Paradas');
+    expect(result.datasets[0].data).toEqual([5, 0]);
   });
 
-  it('should format data for "bar" chart with multiple datasets', () => {
+  it('should format "bar" with DF, MTBF and MTTR datasets', () => {
     const result = formatForChart(sampleData, 'bar') as ChartFormattedResponse;
     expect(result.labels).toEqual(['COMPRESSORES', 'BOMBAS']);
-    expect(result.datasets).toHaveLength(4);
-    expect(result.datasets[0]).toEqual({ label: 'DF', data: [90, 100] });
-    expect(result.datasets[1]).toEqual({ label: 'MTBF', data: [18, 200] });
-    expect(result.datasets[2]).toEqual({ label: 'MTTR', data: [2, 0] });
-    expect(result.datasets[3]).toEqual({ label: 'Paradas', data: [5, 0] });
+    expect(result.datasets).toHaveLength(3);
+    expect(result.datasets[0]).toEqual({ label: 'DF (%)', data: [90, 100] });
+    expect(result.datasets[1]).toEqual({ label: 'MTBF (h)', data: [18, 200] });
+    expect(result.datasets[2]).toEqual({ label: 'MTTR (h)', data: [2, 0] });
   });
 
-  it('should format data for "line" chart same as "bar"', () => {
+  it('should format "line" with tempo_prev and tempo_corretiva', () => {
     const result = formatForChart(
       sampleData,
       'line',
     ) as ChartFormattedResponse;
     expect(result.labels).toEqual(['COMPRESSORES', 'BOMBAS']);
-    expect(result.datasets).toHaveLength(4);
-    expect(result.datasets[0].label).toBe('DF');
+    expect(result.datasets).toHaveLength(2);
+    expect(result.datasets[0]).toEqual({
+      label: 'Tempo Previsto (h)',
+      data: [100, 200],
+    });
+    expect(result.datasets[1]).toEqual({
+      label: 'Tempo Corretiva (h)',
+      data: [10, 0],
+    });
   });
 
   it('should handle empty data array', () => {

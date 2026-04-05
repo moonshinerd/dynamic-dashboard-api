@@ -174,8 +174,8 @@ describe('GET /maintenance/reports/performance-indicator (integration)', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.labels).toBeDefined();
-    expect(response.body.data.datasets.length).toBeGreaterThan(1);
-    expect(response.body.data.datasets[0]).toHaveProperty('label');
+    expect(response.body.data.datasets).toHaveLength(3);
+    expect(response.body.data.datasets[0].label).toBe('DF (%)');
   });
 
   it('should return line chart format when chartType=line', async () => {
@@ -186,7 +186,8 @@ describe('GET /maintenance/reports/performance-indicator (integration)', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.labels).toBeDefined();
-    expect(response.body.data.datasets[0]).toHaveProperty('label');
+    expect(response.body.data.datasets).toHaveLength(2);
+    expect(response.body.data.datasets[0].label).toBe('Tempo Previsto (h)');
   });
 
   it('should reject invalid chartType', async () => {

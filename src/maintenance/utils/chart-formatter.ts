@@ -23,20 +23,32 @@ export function formatForChart(
   const labels = data.map((row) => row.Familia);
 
   if (chartType === 'pie') {
+    // Pie chart: proportion of total stops per family (parts of a whole)
     return {
       labels,
-      datasets: [{ data: data.map((row) => row.DF) }],
+      datasets: [{ label: 'Paradas', data: data.map((row) => row.Paradas) }],
     };
   }
 
-  // 'bar' and 'line': multi-dataset with all KPIs
+  if (chartType === 'bar') {
+    // Bar chart: one dataset per KPI, each with compatible scale
+    // Separate into percentage-based (DF) and hours-based (MTBF, MTTR) groups
+    return {
+      labels,
+      datasets: [
+        { label: 'DF (%)', data: data.map((r) => r.DF) },
+        { label: 'MTBF (h)', data: data.map((r) => r.MTBF) },
+        { label: 'MTTR (h)', data: data.map((r) => r.MTTR) },
+      ],
+    };
+  }
+
+  // Line chart: time-related metrics (hours) per family, suitable for comparison
   return {
     labels,
     datasets: [
-      { label: 'DF', data: data.map((r) => r.DF) },
-      { label: 'MTBF', data: data.map((r) => r.MTBF) },
-      { label: 'MTTR', data: data.map((r) => r.MTTR) },
-      { label: 'Paradas', data: data.map((r) => r.Paradas) },
+      { label: 'Tempo Previsto (h)', data: data.map((r) => r.tempo_prev) },
+      { label: 'Tempo Corretiva (h)', data: data.map((r) => r.tempo_corretiva) },
     ],
   };
 }
