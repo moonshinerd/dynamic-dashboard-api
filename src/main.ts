@@ -8,8 +8,13 @@ import { env } from './config/env';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
-  await app.listen(env.PORT);
+  app.enableCors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    optionsSuccessStatus: 204,
+  });
+  await app.listen(env.PORT, '0.0.0.0');
   console.log(`Application running on port ${env.PORT}`);
 }
 

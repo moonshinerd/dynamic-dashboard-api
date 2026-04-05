@@ -60,8 +60,8 @@ export class PrismaMaintenanceRepository implements MaintenanceRepository {
         AND et.data_programada <= ${endDate}
       LEFT JOIN sofman_apontamento_paradas p
         ON p.id_equipamento = e.ID
-        AND DATE(p.data_hora_stop) >= ${startDate}
-        AND DATE(p.data_hora_stop) <= ${endDate}
+        AND p.data_hora_stop >= ${startDate}
+        AND p.data_hora_stop < DATE_ADD(${endDate}, INTERVAL 1 DAY)
         ${typeFilter}
       WHERE f.ID_cliente = ${clientId}
       GROUP BY f.ID, f.familia
